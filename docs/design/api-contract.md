@@ -13,5 +13,15 @@ Success: 200 { user: UserPublic, accessToken: string, refreshToken: string }
 Errors:
   401 INVALID_CREDENTIALS  — "Invalid email or password."
 
+
+## POST /api/posts/:id/comments
+Request: { body: string }
+Success: 201 { comment: CommentPublic }
+Errors:
+  400 EMPTY_COMMENT        — "Comment cannot be empty."
+  400 COMMENT_TOO_LONG     — "Comment exceeds the maximum allowed length."
+  401 UNAUTHENTICATED      — "You must be logged in to comment."
+  409 POST_NOT_PUBLISHED   — "This post is not open for comments."
+
 ## GET /api/posts?page=n
 Success: 200 { posts: PostPublic[], page: number, hasMore: boolean }
