@@ -10,7 +10,10 @@ import { TokenService } from "./token.service.js";
 class EmailAlreadyRegisteredError extends Error {}
 class WeakPasswordError extends Error {}
 class InvalidCredentialsError extends Error {}
-
+function toPublicUser(user) {
+  const { passwordHash, ...publicUser } = user;
+  return publicUser;
+}
 const MIN_PASSWORD_LENGTH = 8;
 
 export const AuthService = {
@@ -41,7 +44,7 @@ export const AuthService = {
     }
 
     const tokens = TokenService.issueTokens(user);
-    return { user, ...tokens };
+    return { user: toPublicUser(user), ...tokens };
   },
 
   async login({ email, password }) {
@@ -56,7 +59,7 @@ export const AuthService = {
     }
 
     const tokens = TokenService.issueTokens(user);
-    return { user, ...tokens };
+    return { user: toPublicUser(user), ...tokens };
   },
 };
 
