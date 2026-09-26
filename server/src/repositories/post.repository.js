@@ -19,4 +19,46 @@ export const PostRepository = {
     const hasMore = rows.length > pageSize;
     return { posts: rows.slice(0, pageSize), hasMore };
   },
+    async searchPublished({ query, page, pageSize }) {
+    const where = {
+      status: "PUBLISHED",
+      OR: [
+        { title: { contains: query, mode: "insensitive" } },
+        { body: { contains: query, mode: "insensitive" } },
+      ],
+    };
+    const rows = await prisma.post.findMany({
+      where,
+      orderBy: { publishedAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize + 1,
+    });
+    const hasMore = rows.length > pageSize;
+    return { posts: rows.slice(0, pageSize), hasMore };
+  },
+
+  createWithTags({ authorId, title, body, status, publishedAt, tagNames = [] }) {
+    return prisma.post.create({
+      data: {
+        authorId,
+        title,
+        body,
+        status,
+        publishedAt,
+        tags: {
+          create: tagNames.map((name) => ({
+            tag: {
+              connectOrCreate: {
+                where: { name },
+                create: { name },
+              },
+            },
+          })),
+        },
+      },
+      include: {
+        tags: { include: { tag: true } },
+      },
+    });
+  },
 };
