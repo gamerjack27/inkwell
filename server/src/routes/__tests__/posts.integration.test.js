@@ -57,4 +57,20 @@ test("registering with a duplicate email fails end to end (US-01 extension 3a, v
 
   expect(secondAttempt.status).toBe(400);
   expect(secondAttempt.body.error.code).toBe("EMAIL_ALREADY_REGISTERED");
+});  // ← this closing brace+paren+semicolon must be here, ending the previous test
+
+test("a registered user can log in with the same credentials (US-01 + US-02 integration)", async () => {
+  const registerRes = await request(app)
+    .post("/api/auth/register")
+    .send({ email: "bob@example.com", displayName: "Bob", password: "correcthorse" });
+
+  expect(registerRes.status).toBe(201);
+
+  const loginRes = await request(app)
+    .post("/api/auth/login")
+    .send({ email: "bob@example.com", password: "correcthorse" });
+
+  expect(loginRes.status).toBe(200);
+  expect(loginRes.body.user.email).toBe("bob@example.com");
+  expect(loginRes.body.accessToken).toBeDefined();
 });
