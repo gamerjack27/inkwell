@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import { UserRepository } from "../repositories/user.repository.js";
 import { assertNonEmpty, ValidationError } from "../utils/validation.js";
 import { TokenService } from "./token.service.js";
+import { logger } from "../lib/logger.js";
 
 class EmailAlreadyRegisteredError extends Error {}
 class WeakPasswordError extends Error {}
@@ -48,20 +49,20 @@ export const AuthService = {
     return { user: toPublicUser(user), ...tokens };
   },
 
-  async login({ email, password }) {
-    const user = await UserRepository.findByEmail(email);
-    if (!user) {
-      throw new InvalidCredentialsError();
-    }
+      async login({ email, password }) {
+      const user = await UserRepository.findByEmail(email);
+      if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+        // A09's fix: a failed login attempt is now a recorded, visible
+        // event, not a silent failure only the requester ever sees. A
+        // structured object (not a free-form sentence) is what makes this
+        // searchable by "event" or "email" once logs are aggregated.
+        logger.warn({ event: "auth.login.failed", email }, "Failed login attempt");
+        throw new InvalidCredentialsError();
+      }
 
-    const matches = await bcrypt.compare(password, user.passwordHash);
-    if (!matches) {
-      throw new InvalidCredentialsError();
-    }
-
-    const tokens = TokenService.issueTokens(user);
-    return { user: toPublicUser(user), ...tokens };
-  },
+      const tokens = TokenService.issueTokens(user);
+      return { user: toPublicUser(user), ...tokens };
+    },
 };
 
 export { EmailAlreadyRegisteredError, WeakPasswordError, InvalidCredentialsError, ValidationError };

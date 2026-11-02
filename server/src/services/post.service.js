@@ -42,4 +42,11 @@ export const PostService = {
     const clampedPageSize = Math.min(pageSize, MAX_PAGE_SIZE);
     return searchStrategy.search(query, { page, pageSize: clampedPageSize });
   },
+  async getById(id) {
+    return PostRepository.findById(id);
+  },
+
+  async delete(id) {
+    return PostRepository.deleteById(id);
+  },
 };

@@ -62,3 +62,14 @@ describe("PostService.search", () => {
     );
   });
 });
+
+test("clamps an oversized pageSize before delegating to the search strategy (Lecture 15, Exercise 1)", async () => {
+  mockSearchStrategy.search.mockResolvedValue({ posts: [], hasMore: false });
+
+  await PostService.search({ query: "design", page: 1, pageSize: 5000 });
+
+  expect(mockSearchStrategy.search).toHaveBeenCalledWith(
+    "design",
+    { page: 1, pageSize: 50 } // clamped to MAX_PAGE_SIZE, not the requested 5000
+  );
+});
